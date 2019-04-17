@@ -43,7 +43,7 @@ func setupSimulatedTPM(t *testing.T) (*simulator.Simulator, *TPM) {
 	}
 }
 
-func TestEK(t *testing.T) {
+func TestSimTPM20EK(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 
@@ -56,7 +56,7 @@ func TestEK(t *testing.T) {
 	}
 }
 
-func TestInfo(t *testing.T) {
+func TestSimTPM20Info(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 
@@ -68,7 +68,7 @@ func TestInfo(t *testing.T) {
 	t.Logf("TPM Info = %+v", info)
 }
 
-func TestAIKCreateAndLoad(t *testing.T) {
+func TestSimTPM20AIKCreateAndLoad(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 
@@ -99,8 +99,8 @@ func TestAIKCreateAndLoad(t *testing.T) {
 	}
 }
 
-// chooseEK selects the EK public which will be activated against.
-func chooseEK(t *testing.T, eks []PlatformEK) crypto.PublicKey {
+// chooseEKPub selects the EK public which will be activated against.
+func chooseEKPub(t *testing.T, eks []PlatformEK) crypto.PublicKey {
 	t.Helper()
 
 	for _, ek := range eks {
@@ -115,7 +115,7 @@ func chooseEK(t *testing.T, eks []PlatformEK) crypto.PublicKey {
 	return nil
 }
 
-func TestActivateCredentialTPM20(t *testing.T) {
+func TestSimTPM20ActivateCredential(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 
@@ -129,7 +129,7 @@ func TestActivateCredentialTPM20(t *testing.T) {
 	if err != nil {
 		t.Fatalf("EKs() failed: %v", err)
 	}
-	ek := chooseEK(t, EKs)
+	ek := chooseEKPub(t, EKs)
 
 	att, err := tpm2.DecodeAttestationData(aik.CreateAttestation)
 	if err != nil {
@@ -156,7 +156,7 @@ func TestActivateCredentialTPM20(t *testing.T) {
 	}
 }
 
-func TestQuoteTPM20(t *testing.T) {
+func TestSimTPM20Quote(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 
@@ -177,7 +177,7 @@ func TestQuoteTPM20(t *testing.T) {
 	}
 }
 
-func TestPCRsTPM20(t *testing.T) {
+func TestSimTPM20PCRs(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 
@@ -204,7 +204,7 @@ func TestPCRsTPM20(t *testing.T) {
 	}
 }
 
-func TestPersistence(t *testing.T) {
+func TestSimTPM20Persistence(t *testing.T) {
 	sim, tpm := setupSimulatedTPM(t)
 	defer sim.Close()
 

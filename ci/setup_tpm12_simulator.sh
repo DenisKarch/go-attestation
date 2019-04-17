@@ -26,6 +26,7 @@ if [[ "${1}" == "" ]]; then
   exit 1
 fi
 
+PROJECT_ROOT=$(pwd)
 BUILD_BASE="${1%/}" # Trim any trailing slash.
 SIMULATOR_SRC="${BUILD_BASE}/simulator"
 
@@ -38,7 +39,7 @@ setup_build_base () {
     mkdir -pv "${BUILD_BASE}"
   fi
 
-  sudo apt-get -y install libssl-dev build-essential make trousers libtool autoconf
+  sudo apt-get -y install libssl-dev build-essential make trousers libtool autoconf tpm-tools
 }
 
 fetch_simulator () {
@@ -82,12 +83,13 @@ run_simulator () {
 }
 
 setup_tpm () {
+  echo "Initializing the TPM..."
+  ${SIMULATOR_SRC}/libtpm/utils/tpminit
   echo "Starting the TPM..."
-  ${SIMULATOR_SRC}/libtpm/utils/tpmbios -v
-  echo "Creating a fake EK..."
-  ${SIMULATOR_SRC}/libtpm/utils/createek || true
-  echo "Allocating NVRAM..."
-  ${SIMULATOR_SRC}/libtpm/utils/nv_definespace -in ffffffff -sz 0
+  ${SIMULATOR_SRC}/libtpm/utils/tpmbios -cs
+
+  ${SIMULATOR_SRC}/libtpm/utils/tpminit
+  ${SIMULATOR_SRC}/libtpm/utils/tpmbios -cs
 }
 
 run_tcsd () {
@@ -96,7 +98,12 @@ run_tcsd () {
   TCSD_PID=$!
   echo "${TCSD_PID}" > "${BUILD_BASE}/tcsd_pid"
   disown
-  sleep 2
+  sleep 1
+  tpm_createek
+  tpm_takeownership -yz
+  tpm_nvdefine -i 268496896 -z -s 3800 -p OWNERWRITE
+  go run -v "${PROJECT_ROOT}/ci/gen_ekcert.go"
+  sleep 1
 }
 
 setup_build_base
@@ -105,4 +112,3 @@ build_simulator
 run_simulator
 setup_tpm
 run_tcsd
-
